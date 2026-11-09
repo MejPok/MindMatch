@@ -128,6 +128,7 @@ namespace MindMatch.Controllers
 
             sessionState.RoundIndex = session.currentRoundIndex;
             sessionState.RoundState = currentRound.state;
+            sessionState.answeredQuestion = joinedPlayer.answeredThisRound;
 
             if (currentRound.state == RoundState.WaitingForAnswers || currentRound.state == RoundState.ShowingResults)
             {
@@ -212,7 +213,7 @@ namespace MindMatch.Controllers
 
             if(currentRound.state == RoundState.WaitingForAnswers)
             {
-                var player = session.joinedPlayers.FirstOrDefault(x => x.playerToken == playerToken)
+                var player = session.joinedPlayers.FirstOrDefault(x => x.playerToken == playerToken);
                 if (player != null)
                 {
                     if(player.answeredThisRound == false)
@@ -220,6 +221,10 @@ namespace MindMatch.Controllers
                         player.answeredThisRound = true;
                         answer.playersThatAnsweredThis.Add(player);
                         currentRound.playerAnswers.Add(answer);
+                        currentRound.playersAnswered = currentRound.playerAnswers.Count();
+
+                        await dbContext.SaveChangesAsync();
+
 
                         return Ok("answered");
                     }

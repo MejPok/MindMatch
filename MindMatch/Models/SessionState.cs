@@ -10,6 +10,7 @@ namespace MindMatch.Models
         public string RoundQuestion { get; set; }
         public int RoundIndex { get; set; }
         public int PlayersAnsweredQuestion { get; set; }
+        public bool answeredQuestion { get; set; } = false;
 
         public List<string> playerNames { get; set; }
         public List<int> playerScores { get; set; }
