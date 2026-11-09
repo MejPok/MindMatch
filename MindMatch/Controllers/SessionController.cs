@@ -234,6 +234,29 @@ namespace MindMatch.Controllers
 
         }
 
+        [HttpGet("answer")]
+        public async Task<IActionResult> GetAllAnswers([FromQuery] int sessionId, [FromQuery] string playerToken)
+        {
+            var session = await dbContext.GameSessions
+    .Include(s => s.joinedPlayers)
+    .Include(s => s.rounds)
+        .ThenInclude(r => r.playerAnswers)
+    .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
+
+            var currentRound = session.rounds[session.currentRoundIndex];
+
+            if (currentRound.state == RoundState.ShowingResults)
+            {
+                var player = session.joinedPlayers.FirstOrDefault(x => x.playerToken == playerToken);
+                if (player != null)
+                {
+                    return Ok(currentRound.playerAnswers);
+                }
+            }
+            return BadRequest("bad request");
+
+        }
+
         public static string GeneratePlayerToken()
         {
             byte[] tokenBytes = RandomNumberGenerator.GetBytes(32);
