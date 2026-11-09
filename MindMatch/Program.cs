@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using MindMatch.Db;
 
 namespace MindMatch
 {
@@ -13,7 +15,19 @@ namespace MindMatch
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            builder.Services.AddDbContext<GameDbContext>(options =>
+            options.UseSqlite("Data Source=MindMatch.db"));
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
