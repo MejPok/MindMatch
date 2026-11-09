@@ -1,0 +1,6 @@
+@MindMatch_HostAddress = http://localhost:5129
+
+GET {{MindMatch_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
