@@ -2,6 +2,7 @@
 const sessionId = false;
 const playerToken = "";
 const API_BASE = "https://localhost:7149";
+const roomCode = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
     if(joinedMatch == false){
@@ -47,7 +48,7 @@ function CreateStartScreen(){
     joinRoomButton.value = "Join Room";
     joinRoomButton.classList.add("centeredObject");
 
-    joinRoomButton.addEventListener('onclick', JoinRoom);
+    joinRoomButton.addEventListener("click", JoinRoom);
     
 
 
@@ -59,6 +60,8 @@ function CreateStartScreen(){
     createLobbyButton.type = "button";
     createLobbyButton.value = "Create";
     createLobbyButton.style.width = '50%';
+    createLobbyButton.addEventListener("click", CreateRoom);
+
 
     createLobbyButton.classList.add('centeredObject');
 
@@ -82,8 +85,10 @@ function CreateStartScreen(){
 
 }
 
-function JoinRoom(){
+async function JoinRoom(){
     let roomCode = document.getElementById('roomCodeInput');
+    let playerName = document.getElementById('nameInput');
+
     if(roomCode.textContent.length == 4){
 
 
@@ -92,6 +97,44 @@ function JoinRoom(){
     }
 }
 
-function CreateLobby(){
+async function createRoom() {
+  return apiRequest("/api/session/newRoom", { method: "POST" });
+}
 
+async function CreateRoom(){
+    let playerName = document.getElementById('nameInput');
+    if(playerName.textContent.length >= 4){
+        const joinCode = await createRoom();
+        roomCode = joinCode;
+        console.log("Room code:", joinCode);
+
+        
+
+    } else {
+        alert("name too short");
+    }
+   
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
+    },
+  });
+
+  const text = await response.text();
+  let data = text;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+  }
+
+  if (!response.ok) {
+    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
+  }
+
+  return data;
 }
