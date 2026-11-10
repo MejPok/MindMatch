@@ -1,6 +1,4 @@
 ﻿const joinedMatch = false;
-const sessionId = false;
-const playerToken = "";
 const API_BASE = "https://localhost:7149";
 const roomCode = 0;
 
@@ -14,6 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
 const playField = document.getElementById('playField');
 
 function CreateStartScreen(){
+    /*
+    document.getElementById("scoreBoard").hidden = true;
+    document.getElementById("gameScreen").hidden = true;
+    */
+   
     const nameInput = document.createElement("input");
     nameInput.id = 'nameInput';
     nameInput.type = "text";
@@ -85,17 +88,50 @@ function CreateStartScreen(){
 
 }
 
-async function JoinRoom(){
+
+async function joinRoom(joinCode, name) {
+  const path =
+    `/api/session/joinRoom/${encodeURIComponent(joinCode)}` +
+    `/${encodeURIComponent(name)}`;
+
+  return apiRequest(path, { method: "POST" });
+}
+
+async function JoinRoom(e){
     let roomCode = document.getElementById('roomCodeInput');
     let playerName = document.getElementById('nameInput');
 
-    if(roomCode.textContent.length == 4){
-
-
+    if(e != null){
+        const player = await joinRoom(e, playerName.value);
+        console.log(player.playerName);
+    console.log(player.sessionId);
+    localStorage.setItem("playerToken", player.playerToken);
+    localStorage.setItem("sessionId", player.sessionId);
+    } 
+    else if(roomCode.textContent.length == 4){
+        const player = await joinRoom(roomCode.textContent, playerName.value);
+        console.log(player.playerName);
+        console.log(player.sessionId);
+        localStorage.setItem("playerToken", player.playerToken);
+        localStorage.setItem("sessionId", player.sessionId);
     } else {
         alert("room code too short");
+        return;
     }
+
+    joinedMatch = true;
+    console.log("joined fine hopefully");
+    ShowRoomScreen();
+    
 }
+
+async function ShowRoomScreen(){
+  document.getElementById("playField").hidden = true;
+
+  document.getElementById("scoreBoard").hidden = false;
+  document.getElementById("gameScreen").hidden = false;
+}
+
 
 async function createRoom() {
   return apiRequest("/api/session/newRoom", { method: "POST" });
@@ -103,13 +139,11 @@ async function createRoom() {
 
 async function CreateRoom(){
     let playerName = document.getElementById('nameInput');
-    if(playerName.textContent.length >= 4){
+    if(playerName.value.length > 4){
         const joinCode = await createRoom();
-        roomCode = joinCode;
         console.log("Room code:", joinCode);
 
-        
-
+        JoinRoom(joinCode);
     } else {
         alert("name too short");
     }
