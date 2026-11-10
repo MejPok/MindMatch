@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using MindMatch.Db;
 using MindMatch.Models;
-using System.Formats.Asn1;
 using System.Security.Cryptography;
 
 namespace MindMatch.Controllers
@@ -69,7 +68,7 @@ namespace MindMatch.Controllers
 
                 session.joinedPlayers.Add(player);
 
-                if(session.sessionOwner == null)
+                if (session.sessionOwner == null)
                 {
                     session.sessionOwner = player;
                 }
@@ -138,24 +137,48 @@ namespace MindMatch.Controllers
 
 
 
-            if (currentRound.state == RoundState.ShowingResults)
-            {
-                List<int> playerScores = new List<int>();
-                foreach (var p in session.joinedPlayers)
-                {
-                    playerScores.Add(p.score);
-                }
 
-                sessionState.playerScores = playerScores;
+            List<int> playerScores = new List<int>();
+            foreach (var p in session.joinedPlayers)
+            {
+                playerScores.Add(p.score);
             }
+
+            sessionState.playerScores = playerScores;
 
             return Ok(sessionState);
 
 
+        }
 
+        public static async Task CalculatePlayerScores(int sessionId, GameDbContext dbContext)
+        {
 
+            var session = await dbContext.GameSessions
+    .Include(s => s.joinedPlayers)
+    .Include(s => s.rounds)
+        .ThenInclude(r => r.playerAnswers)
+    .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
 
+            for (int i = 0; i < session.joinedPlayers.Count(); i++)
+            {
+                var player = session.joinedPlayers[i];
+                int currentScore = 0;
+                foreach (var round in session.rounds)
+                {
+                    foreach (var answer in round.playerAnswers)
+                    {
+                        if (answer.playersThatAnsweredThis.Contains(player))
+                        {
+                            currentScore += answer.playersThatAnsweredThis.Count();
+                        }
+                    }
+                }
 
+                player.score = currentScore;
+            }
+
+            await dbContext.SaveChangesAsync();
         }
 
         [HttpPost]
@@ -166,9 +189,10 @@ namespace MindMatch.Controllers
             .Include(s => s.rounds)
             .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
 
-            if(session.sessionOwner != null)
+            if (session.sessionOwner != null)
             {
-                if(session.sessionOwner.playerToken == playerToken){
+                if (session.sessionOwner.playerToken == playerToken)
+                {
 
                     var currentRound = session.rounds[session.currentRoundIndex];
 
@@ -177,11 +201,13 @@ namespace MindMatch.Controllers
                         currentRound.state = RoundState.WaitingForAnswers;
                         session.sessionStarted = true;
 
-                    } else if (currentRound.state == RoundState.WaitingForAnswers)
+                    }
+                    else if (currentRound.state == RoundState.WaitingForAnswers)
                     {
                         currentRound.state = RoundState.ShowingResults;
 
-                    } else if(currentRound.state == RoundState.ShowingResults)
+                    }
+                    else if (currentRound.state == RoundState.ShowingResults)
                     {
                         currentRound.state = RoundState.WaitingForAnswers;
                     }
@@ -195,7 +221,8 @@ namespace MindMatch.Controllers
                 {
                     return BadRequest("you are not the session owner");
                 }
-            } else
+            }
+            else
             {
                 return BadRequest("no session owner");
             }
@@ -211,20 +238,38 @@ namespace MindMatch.Controllers
 
             var currentRound = session.rounds[session.currentRoundIndex];
 
-            if(currentRound.state == RoundState.WaitingForAnswers)
+            if (currentRound.state == RoundState.WaitingForAnswers)
             {
                 var player = session.joinedPlayers.FirstOrDefault(x => x.playerToken == playerToken);
                 if (player != null)
                 {
-                    if(player.answeredThisRound == false)
+                    if (player.answeredThisRound == false)
                     {
                         player.answeredThisRound = true;
-                        answer.playersThatAnsweredThis.Add(player);
-                        currentRound.playerAnswers.Add(answer);
+
+                        var foundAnswer = currentRound.playerAnswers.FirstOrDefault(x => x.submittedAnswer == answer.submittedAnswer);
+
+                        if (foundAnswer != null)
+                        {
+                            foundAnswer.playersThatAnsweredThis.Add(player);
+                        }
+                        else
+                        {
+                            answer.playersThatAnsweredThis.Add(player);
+                            currentRound.playerAnswers.Add(answer);
+                        }
                         currentRound.playersAnswered = currentRound.playerAnswers.Count();
+
+                        if (currentRound.playersAnswered >= session.joinedPlayers.Count())
+                        {
+                            currentRound.state = RoundState.ShowingResults;
+
+                        }
+
 
                         await dbContext.SaveChangesAsync();
 
+                        await CalculatePlayerScores(sessionId, dbContext);
 
                         return Ok("answered");
                     }
@@ -256,6 +301,8 @@ namespace MindMatch.Controllers
             return BadRequest("bad request");
 
         }
+
+
 
         public static string GeneratePlayerToken()
         {
