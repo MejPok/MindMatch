@@ -6,8 +6,11 @@ let isSessionOwner = false;
 document.addEventListener("DOMContentLoaded", () => {
     if(joinedMatch == false){
         CreateStartScreen();
-        return;
     }
+
+     document
+    .getElementById("submitQuestionButton")
+    .addEventListener("click", submitAnswer);
 });
 
 const playField = document.getElementById('playField');
@@ -130,7 +133,9 @@ async function JoinRoom(joinCodePassed = null){
         getSessionState();
 
         if(isSessionOwner){
-          document.getElementById('nextPhaseButton').addEventListener('click', tryNextPhase);
+          document.getElementById('nextPhaseButton').addEventListener('click', () => {
+            tryNextPhase();
+          });
         } else {
           document.getElementById('nextPhaseButton').hidden = true;
         }
@@ -262,6 +267,8 @@ async function updatePageBasedOnSessionState(sessionState){
     let phaseInfo = document.getElementById('phaseInfo');
     let questionDiv = document.getElementById('questionDiv');
     let questionInput = document.getElementById('questionInput');
+    let submitButton = document.getElementById('submitQuestionButton');
+
 
     numberOfPlayers.textContent = `${sessionState.amountOfPlayers} players`;
     if(sessionState.RoundIndex == 1){
@@ -274,10 +281,12 @@ async function updatePageBasedOnSessionState(sessionState){
         phaseInfo.textContent = "Waiting for start";
         questionDiv.hidden = true;
         questionInput.hidden = true;
+        submitButton.hidden = true;
 
     } else if(sessionState.roundState == 1){
-        phaseInfo.textContent = "Not everyone answered yet";
 
+        phaseInfo.textContent = "Not everyone answered yet";
+        submitButton.hidden = false;
         questionDiv.textContent = `${sessionState.roundQuestion}`;
 
         questionDiv.hidden = false;
@@ -285,6 +294,43 @@ async function updatePageBasedOnSessionState(sessionState){
     } else if(sessionState.roundState == 2){
         phaseInfo.textContent = "Waiting for next round";
         questionInput.hidden = true;
+        submitButton.hidden = true;
+
     }
+}
+
+async function submitAnswer() {
+  let questionInput = document.getElementById("questionInput");
+  const answerText = questionInput.value.trim();
+
+  if (!answerText) {
+    alert("Enter an answer.");
+    return;
+  }
+
+  const params = new URLSearchParams({
+    sessionId: sessionStorage.getItem("sessionId") ?? "",
+    playerToken: sessionStorage.getItem("playerToken") ?? ""
+  });
+
+  try {
+    const response = await fetch(`${API_BASE}/api/session/answer?${params}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ submittedAnswer: answerText })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    questionInput.value = "";
+    console.log(await response.text()); // "answered"
+  } catch (error) {
+    console.error("Could not submit answer:", error);
+    alert(`Could not submit answer: ${error.message}`);
+  }
 }
 

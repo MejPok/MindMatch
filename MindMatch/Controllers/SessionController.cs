@@ -70,7 +70,7 @@ namespace MindMatch.Controllers
                 };
 
 
-                if(session.joinedPlayers.Count() == 0)
+                if (session.joinedPlayers.Count() == 0)
                 {
                     session.sessionOwnerToken = player.playerToken;
                 }
@@ -238,7 +238,15 @@ namespace MindMatch.Controllers
             var session = await dbContext.GameSessions
             .Include(s => s.joinedPlayers)
             .Include(s => s.rounds)
+                .ThenInclude(r => r.playerAnswers)
+                    .ThenInclude(a => a.playersThatAnsweredThis)
             .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
+
+            if (session == null)
+                return NotFound("No session found.");
+
+            if (session.currentRoundIndex >= session.rounds.Count)
+                return BadRequest("No current round.");
 
             var currentRound = session.rounds[session.currentRoundIndex];
 
@@ -262,35 +270,35 @@ namespace MindMatch.Controllers
                             answer.playersThatAnsweredThis.Add(player);
                             currentRound.playerAnswers.Add(answer);
                         }
-                        currentRound.playersAnswered = currentRound.playerAnswers.Count();
 
-                        if (currentRound.playersAnswered >= session.joinedPlayers.Count())
-                        {
+                        currentRound.playersAnswered++;
+
+                        if (currentRound.playersAnswered >= session.joinedPlayers.Count)
                             currentRound.state = RoundState.ShowingResults;
 
-                        }
-
-
-                        await dbContext.SaveChangesAsync();
-
-                        await CalculatePlayerScores(sessionId, dbContext);
-
-                        return Ok("answered");
                     }
+
+
+                    await dbContext.SaveChangesAsync();
+
+                    await CalculatePlayerScores(sessionId, dbContext);
+
+                    return Ok("answered");
                 }
             }
             return BadRequest("bad request");
-
         }
+
+
 
         [HttpGet("answer")]
         public async Task<IActionResult> GetAllAnswers([FromQuery] int sessionId, [FromQuery] string playerToken)
         {
             var session = await dbContext.GameSessions
-    .Include(s => s.joinedPlayers)
-    .Include(s => s.rounds)
+        .Include(s => s.joinedPlayers)
+        .Include(s => s.rounds)
         .ThenInclude(r => r.playerAnswers)
-    .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
+        .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
 
             var currentRound = session.rounds[session.currentRoundIndex];
 
