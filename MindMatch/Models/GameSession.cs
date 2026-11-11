@@ -14,7 +14,7 @@ namespace MindMatch.Models
         public List<Player> joinedPlayers { get; set; } = new List<Player>();
         public List<Round> rounds { get; set; } = new List<Round>();
 
-        public Player? sessionOwner { get; set; }
+        public string sessionOwnerToken { get; set; }
         public int currentRoundIndex { get; set; } = 0;
 
         public bool sessionStarted { get; set; } = false;

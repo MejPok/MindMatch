@@ -52,15 +52,14 @@ namespace MindMatch.Migrations
                     b.Property<int>("maxAmountOfPlayers")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("sessionOwnerId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("sessionOwnerToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("sessionStarted")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("gameSessionId");
-
-                    b.HasIndex("sessionOwnerId");
 
                     b.ToTable("GameSessions");
                 });
@@ -134,15 +133,6 @@ namespace MindMatch.Migrations
                     b.HasOne("MindMatch.Models.Round", null)
                         .WithMany("playerAnswers")
                         .HasForeignKey("roundId");
-                });
-
-            modelBuilder.Entity("MindMatch.Models.GameSession", b =>
-                {
-                    b.HasOne("MindMatch.Models.Player", "sessionOwner")
-                        .WithMany()
-                        .HasForeignKey("sessionOwnerId");
-
-                    b.Navigation("sessionOwner");
                 });
 
             modelBuilder.Entity("MindMatch.Models.Player", b =>

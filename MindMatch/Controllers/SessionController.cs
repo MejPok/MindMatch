@@ -24,7 +24,7 @@ namespace MindMatch.Controllers
             newSession.currentRoundIndex = 0;
             var random = new Random();
             newSession.joinCode = "" + random.Next(1000, 9999);
-
+            newSession.sessionOwnerToken = "";
 
 
             dbContext.GameSessions.Add(newSession);
@@ -51,7 +51,6 @@ namespace MindMatch.Controllers
         public async Task<IActionResult> CreateNewPlayer(string joinCode, string name) //creates player and joins a room, returns playerToken
         {
             var session = await dbContext.GameSessions
-    .Include(s => s.sessionOwner)
     .Include(s => s.joinedPlayers)
     .FirstOrDefaultAsync(x => x.joinCode == joinCode);
 
@@ -70,12 +69,13 @@ namespace MindMatch.Controllers
 
                 };
 
-                session.joinedPlayers.Add(player);
 
-                if (session.sessionOwner == null)
+                if(session.joinedPlayers.Count() == 0)
                 {
-                    session.sessionOwner = player;
+                    session.sessionOwnerToken = player.playerToken;
                 }
+
+                session.joinedPlayers.Add(player);
 
                 await dbContext.SaveChangesAsync();
 
@@ -193,9 +193,9 @@ namespace MindMatch.Controllers
             .Include(s => s.rounds)
             .FirstOrDefaultAsync(s => s.gameSessionId == sessionId);
 
-            if (session.sessionOwner != null)
+            if (session.sessionOwnerToken != "")
             {
-                if (session.sessionOwner.playerToken == playerToken)
+                if (session.sessionOwnerToken == playerToken)
                 {
 
                     var currentRound = session.rounds[session.currentRoundIndex];

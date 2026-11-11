@@ -121,8 +121,8 @@ async function JoinRoom(joinCodePassed = null){
         console.log(player.playerName);
         console.log(player.sessionId);
 
-        localStorage.setItem("playerToken", player.playerToken);
-        localStorage.setItem("sessionId", player.sessionId);
+        sessionStorage.setItem("playerToken", player.playerToken);
+        sessionStorage.setItem("sessionId", player.sessionId);
 
         joinedMatch = true;
         console.log("joined fine hopefully");
@@ -145,14 +145,19 @@ async function JoinRoom(joinCodePassed = null){
 }
 
 async function  tryNextPhase(p) {
-  const params = new URLSearchParams({
-    sessionId: localStorage.getItem("sessionId") ?? "",
-    playerToken: localStorage.getItem("playerToken") ?? ""
-  });
+  try{
+    const params = new URLSearchParams({
+      sessionId: sessionStorage.getItem("sessionId") ?? "",
+      playerToken: sessionStorage.getItem("playerToken") ?? ""
+    });
 
-  const response = await fetch(`${API_BASE}/api/session?${params}`, {
-    method: "POST"
-  });
+    const response = await fetch(`${API_BASE}/api/session?${params}`, {
+      method: "POST"
+    });
+  } catch(error){
+    console.log(`${error.message}`);
+  }
+  
 }
 
 async function ShowRoomScreen(){
@@ -213,8 +218,8 @@ let sessionState;
 
 async function getSessionState() {
   const params = new URLSearchParams({
-    sessionId: localStorage.getItem("sessionId") ?? "",
-    playerToken: localStorage.getItem("playerToken") ?? ""
+    sessionId: sessionStorage.getItem("sessionId") ?? "",
+    playerToken: sessionStorage.getItem("playerToken") ?? ""
   });
 
   try{
@@ -265,19 +270,19 @@ async function updatePageBasedOnSessionState(sessionState){
 
     roomCodeParagraph.textContent = `Room Code: ${roomCode}`;
 
-    if(sessionState.RoundIndex == 0){
+    if(sessionState.roundState == 0){
         phaseInfo.textContent = "Waiting for start";
         questionDiv.hidden = true;
         questionInput.hidden = true;
 
-    } else if(sessionState.RoundIndex == 1){
+    } else if(sessionState.roundState == 1){
         phaseInfo.textContent = "Not everyone answered yet";
 
         questionDiv.textContent = `${sessionState.roundQuestion}`;
 
         questionDiv.hidden = false;
         questionInput.hidden = false;
-    } else if(sessionState.RoundIndex == 2){
+    } else if(sessionState.roundState == 2){
         phaseInfo.textContent = "Waiting for next round";
         questionInput.hidden = true;
     }
