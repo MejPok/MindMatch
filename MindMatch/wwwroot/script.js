@@ -172,3 +172,37 @@ async function apiRequest(path, options = {}) {
 
   return data;
 }
+
+let stopped = false;
+let timer;
+
+async function getSessionState() {
+  const params = new URLSearchParams({
+    sessionId: localStorage.getItem("sessionId") ?? "",
+    playerToken: localStorage.getItem("playerToken") ?? ""
+  });
+
+  try{
+    const response = await fetch(`api/session/${params}`);
+
+    if(response.ok){
+      const state = await response.json();
+      console.log(state);
+    } else {
+      console.error("cannot get session state", await response.text);
+    }
+  } catch( error ){
+    console.error("something failed", error);
+  } finally {
+    if(!stopped){
+      timer = setTimeout(getSessionState, 1000);
+    }
+  }
+}
+
+getSessionState();
+
+function stopPolling() {
+  stopped = true;
+  clearTimeout(timer);
+}
