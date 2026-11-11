@@ -50,7 +50,11 @@ namespace MindMatch.Controllers
         [HttpPost("joinRoom/{joinCode}/{name}")]
         public async Task<IActionResult> CreateNewPlayer(string joinCode, string name) //creates player and joins a room, returns playerToken
         {
-            var session = dbContext.GameSessions.FirstOrDefault(x => x.joinCode == joinCode);
+            var session = await dbContext.GameSessions
+    .Include(s => s.sessionOwner)
+    .Include(s => s.joinedPlayers)
+    .FirstOrDefaultAsync(x => x.joinCode == joinCode);
+
             if (session == null)
             {
                 return NotFound();

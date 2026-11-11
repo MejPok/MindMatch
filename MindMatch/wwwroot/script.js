@@ -1,6 +1,7 @@
-﻿const joinedMatch = false;
+﻿let joinedMatch = false;
 const API_BASE = "https://localhost:7149";
-const roomCode = 0;
+let roomCode = 0;
+let isSessionOwner = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     if(joinedMatch == false){
@@ -51,7 +52,7 @@ function CreateStartScreen(){
     joinRoomButton.value = "Join Room";
     joinRoomButton.classList.add("centeredObject");
 
-    joinRoomButton.addEventListener("click", JoinRoom);
+    joinRoomButton.addEventListener("click", () => JoinRoom());
     
 
 
@@ -97,32 +98,61 @@ async function joinRoom(joinCode, name) {
   return apiRequest(path, { method: "POST" });
 }
 
-async function JoinRoom(e){
-    let roomCode = document.getElementById('roomCodeInput');
-    let playerName = document.getElementById('nameInput');
 
-    if(e != null){
-        const player = await joinRoom(e, playerName.value);
-        console.log(player.playerName);
-    console.log(player.sessionId);
-    localStorage.setItem("playerToken", player.playerToken);
-    localStorage.setItem("sessionId", player.sessionId);
-    } 
-    else if(roomCode.textContent.length == 4){
-        const player = await joinRoom(roomCode.textContent, playerName.value);
+async function JoinRoom(joinCodePassed = null){
+    let roomCodeInput = document.getElementById('roomCodeInput');
+    let playerName = document.getElementById('nameInput');
+    let code;
+    if(joinCodePassed == null){
+      if (roomCodeInput.value.trim().length < 4) {
+        alert("Enter a 4-digit room code.");
+        return;
+      }
+
+      code = roomCodeInput.value.trim();
+
+    } else {
+      code = joinCodePassed;
+    }
+    
+
+    try{
+        const player = await joinRoom(code, playerName.value.trim());
         console.log(player.playerName);
         console.log(player.sessionId);
+
         localStorage.setItem("playerToken", player.playerToken);
         localStorage.setItem("sessionId", player.sessionId);
-    } else {
-        alert("room code too short");
+
+        joinedMatch = true;
+        console.log("joined fine hopefully");
+        ShowRoomScreen();
+        getSessionState();
+
+        if(isSessionOwner){
+          document.getElementById('nextPhaseButton').addEventListener('click', tryNextPhase);
+        } else {
+          document.getElementById('nextPhaseButton').hidden = true;
+        }
+
+    } catch {
+        alert(`Could not join room: ${error.message}`);
         return;
     }
 
-    joinedMatch = true;
-    console.log("joined fine hopefully");
-    ShowRoomScreen();
     
+    
+}
+
+async function  tryNextPhase(p) {
+  const params = new URLSearchParams({
+    sessionId: localStorage.getItem("sessionId") ?? "",
+    playerToken: localStorage.getItem("playerToken") ?? ""
+  });
+
+  const response = await fetch(`${API_BASE}/api/session?${params}`, {
+    method: "POST"
+  });
 }
 
 async function ShowRoomScreen(){
@@ -144,6 +174,9 @@ async function CreateRoom(){
         console.log("Room code:", joinCode);
 
         JoinRoom(joinCode);
+        isSessionOwner = true;
+
+        roomCode = joinCode;
     } else {
         alert("name too short");
     }
@@ -176,6 +209,8 @@ async function apiRequest(path, options = {}) {
 let stopped = false;
 let timer;
 
+let sessionState;
+
 async function getSessionState() {
   const params = new URLSearchParams({
     sessionId: localStorage.getItem("sessionId") ?? "",
@@ -183,26 +218,68 @@ async function getSessionState() {
   });
 
   try{
-    const response = await fetch(`api/session/${params}`);
+    const response = await fetch(`${API_BASE}/api/session?${params}`);
 
-    if(response.ok){
-      const state = await response.json();
-      console.log(state);
-    } else {
-      console.error("cannot get session state", await response.text);
+    if(!response.ok){
+
+      console.error("cannot get session state", await response.text());
+      return;
     }
+
+    const state = await response.json();
+    sessionState = state;
+    updatePageBasedOnSessionState(state);
+    console.log(state);
+
   } catch( error ){
     console.error("something failed", error);
+
+
   } finally {
     if(!stopped){
+
       timer = setTimeout(getSessionState, 1000);
     }
   }
 }
 
-getSessionState();
-
 function stopPolling() {
   stopped = true;
   clearTimeout(timer);
 }
+
+
+
+
+async function updatePageBasedOnSessionState(sessionState){
+    let numberOfPlayers = document.getElementById('numberOfPlayers');
+    let roomCodeParagraph = document.getElementById('roomCodeParagraph');
+    let phaseInfo = document.getElementById('phaseInfo');
+    let questionDiv = document.getElementById('questionDiv');
+    let questionInput = document.getElementById('questionInput');
+
+    numberOfPlayers.textContent = `${sessionState.amountOfPlayers} players`;
+    if(sessionState.RoundIndex == 1){
+        numberOfPlayers.textContent = `${sessionState.playersAnsweredQuestion} / ${sessionState.amountOfPlayers} players answered`;
+    }
+
+    roomCodeParagraph.textContent = `Room Code: ${roomCode}`;
+
+    if(sessionState.RoundIndex == 0){
+        phaseInfo.textContent = "Waiting for start";
+        questionDiv.hidden = true;
+        questionInput.hidden = true;
+
+    } else if(sessionState.RoundIndex == 1){
+        phaseInfo.textContent = "Not everyone answered yet";
+
+        questionDiv.textContent = `${sessionState.roundQuestion}`;
+
+        questionDiv.hidden = false;
+        questionInput.hidden = false;
+    } else if(sessionState.RoundIndex == 2){
+        phaseInfo.textContent = "Waiting for next round";
+        questionInput.hidden = true;
+    }
+}
+
