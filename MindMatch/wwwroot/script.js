@@ -239,6 +239,7 @@ async function getSessionState() {
     const state = await response.json();
     sessionState = state;
     updatePageBasedOnSessionState(state);
+    showStatsScreen(state);
     console.log(state);
 
   } catch( error ){
@@ -327,10 +328,88 @@ async function submitAnswer() {
     }
 
     questionInput.value = "";
-    console.log(await response.text()); // "answered"
+    console.log("sent answer"); // "answered"
   } catch (error) {
     console.error("Could not submit answer:", error);
     alert(`Could not submit answer: ${error.message}`);
   }
 }
 
+async function showStatsScreen(state){
+  let statScreen = document.getElementById('scoreBoard');
+  statScreen.replaceChildren();
+
+  let playerName = document.createElement('p');
+  playerName.textContent = "Name";
+
+  let playerAnswer = document.createElement('p');
+  playerAnswer.textContent = "Answer";
+
+  let playerCurrentScoreHeader = document.createElement('p');
+  playerCurrentScoreHeader.textContent = "Score";
+
+  statScreen.append(playerName);
+
+  statScreen.append(playerAnswer);
+
+  statScreen.append(playerCurrentScoreHeader);
+
+  let answers = [];
+
+  if(state.roundState == 2){
+
+    const params = new URLSearchParams({
+      sessionId: sessionStorage.getItem("sessionId") ?? "",
+      playerToken: sessionStorage.getItem("playerToken") ?? ""
+    });
+
+    try{
+      const response = await fetch(`${API_BASE}/api/session/answer?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      answers = await response.json();
+
+      console.log("Received answers:", answers); // "answered"
+    } catch(error) {
+      console.error("Could not retrieve answers:", error);
+    }
+  }
+
+  for(let i = 0; i < state.playerNames.length; i++){
+    let currentPlayer = document.createElement('p');
+    currentPlayer.textContent = `${state.playerNames[i]}`;
+
+    let playerCurrentAnswer = document.createElement('p');
+
+    if(state.roundState == 2){
+      const playerName = state.playerNames[i];
+
+      const matchingAnswer = answers.find(answer =>
+          answer.playersThatAnsweredThis.some(player =>
+              player.playerName === playerName
+          )
+      );
+
+      playerCurrentAnswer.textContent =
+          matchingAnswer?.submittedAnswer ?? "";
+    } else {
+      playerCurrentAnswer.textContent = "";
+
+    }
+
+    let playerCurrentScore = document.createElement('p');
+    playerCurrentScore.textContent = state.playerScores[i];
+
+    statScreen.append(
+      currentPlayer,
+      playerCurrentAnswer,
+      playerCurrentScore
+    );
+
+
+  }
+
+}

@@ -127,6 +127,7 @@ namespace MindMatch.Controllers
             {
                 return Ok(sessionState);
             }
+
             var currentRound = session.rounds[session.currentRoundIndex];
 
             sessionState.RoundIndex = session.currentRoundIndex;
@@ -214,6 +215,13 @@ namespace MindMatch.Controllers
                     else if (currentRound.state == RoundState.ShowingResults)
                     {
                         currentRound.state = RoundState.WaitingForAnswers;
+                        
+                        foreach(var player in session.joinedPlayers){
+                            player.answeredThisRound = false;
+                        }
+                        
+                        session.currentRoundIndex++;
+
                     }
 
                     await dbContext.SaveChangesAsync();
