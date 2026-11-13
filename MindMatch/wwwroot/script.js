@@ -16,10 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
 const playField = document.getElementById('playField');
 
 function CreateStartScreen(){
-    /*
+    
     document.getElementById("scoreBoard").hidden = true;
     document.getElementById("gameScreen").hidden = true;
-    */
+    
    
     const nameInput = document.createElement("input");
     nameInput.id = 'nameInput';
@@ -88,6 +88,17 @@ function CreateStartScreen(){
     playField.append(createLobbyText);
 
     playField.append(createLobbyButton);
+
+    document.getElementById("playField").hidden = false;
+
+    document.getElementById("scoreBoard").hidden = true;
+    document.getElementById("gameScreen").hidden = true;
+
+
+
+
+
+
 
 
 }
@@ -177,14 +188,42 @@ async function createRoom() {
   return apiRequest("/api/session/newRoom", { method: "POST" });
 }
 
+async function askOwnerForRoundQuestions() {
+  const questions = [];
+  const roundCount = 5;
+
+  for (let i = 0; i < roundCount;) {
+    const question = prompt(`Enter question ${i + 1} of ${roundCount}:`);
+
+    if (question === null || question.trim() === "") {
+      alert("A question is required to create the room.");
+      continue;
+    }
+
+    questions.push(question.trim());
+    i++;
+  }
+
+  const sessionId = sessionStorage.getItem("sessionId");
+  const playerToken = sessionStorage.getItem("playerToken");
+  const params = new URLSearchParams({ sessionId, playerToken });
+  const path = `/api/session/CreateQuestions/${encodeURIComponent(sessionId)}/${encodeURIComponent(playerToken)}?${params}`;
+
+  await apiRequest(path, {
+    method: "POST",
+    body: JSON.stringify(questions)
+  });
+}
+
 async function CreateRoom(){
     let playerName = document.getElementById('nameInput');
     if(playerName.value.length > 4){
         const joinCode = await createRoom();
         console.log("Room code:", joinCode);
 
-        JoinRoom(joinCode);
         isSessionOwner = true;
+        await JoinRoom(joinCode);
+        await askOwnerForRoundQuestions();
 
         roomCode = joinCode;
     } else {
@@ -238,8 +277,20 @@ async function getSessionState() {
 
     const state = await response.json();
     sessionState = state;
+
+    if(sessionState.sessionEnded && sessionState.sessionStarted){
+      document.getElementById("playField").hidden = true;
+      document.getElementById("gameScreen").hidden = true;
+
+      document.getElementById("scoreBoard").hidden = false;
+      return;
+    }
+
     updatePageBasedOnSessionState(state);
-    showStatsScreen(state);
+
+    if(sessionState.sessionStarted){
+      showStatsScreen(state);
+    }
     console.log(state);
 
   } catch( error ){
@@ -248,7 +299,6 @@ async function getSessionState() {
 
   } finally {
     if(!stopped){
-
       timer = setTimeout(getSessionState, 1000);
     }
   }
@@ -338,6 +388,7 @@ async function submitAnswer() {
 async function showStatsScreen(state){
   let statScreen = document.getElementById('scoreBoard');
   statScreen.replaceChildren();
+  statScreen.hidden = false;
 
   let playerName = document.createElement('p');
   playerName.textContent = "Name";

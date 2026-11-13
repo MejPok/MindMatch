@@ -16,6 +16,8 @@ namespace MindMatch.Models
 
         public string sessionOwnerToken { get; set; }
         public int currentRoundIndex { get; set; } = 0;
+        public int calculatedRoundIndex { get; set; } = -1;
+
 
         public bool sessionStarted { get; set; } = false;
 

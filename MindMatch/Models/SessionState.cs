@@ -5,6 +5,8 @@ namespace MindMatch.Models
     public class SessionState
     {
         public bool SessionStarted { get; set; } = true;
+        public bool SessionEnded { get; set; } = false;
+
         public int AmountOfPlayers { get; set; }
         public RoundState RoundState { get; set; }
         public string RoundQuestion { get; set; }

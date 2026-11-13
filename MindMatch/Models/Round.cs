@@ -18,6 +18,7 @@
         NotStarted,
         WaitingForAnswers,
         ShowingResults,
+        End
 
     }
 }

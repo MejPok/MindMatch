@@ -42,6 +42,9 @@ namespace MindMatch.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("calculatedRoundIndex")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("currentRoundIndex")
                         .HasColumnType("INTEGER");
 
