@@ -14,7 +14,7 @@ namespace MindMatch
                 options.AddPolicy("Frontend", policy =>
                 {
                     policy
-                        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+                        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "https://mindmatch-lukasprogram.runasp.net")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
