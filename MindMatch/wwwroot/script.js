@@ -1,5 +1,7 @@
 ﻿let joinedMatch = false;
-const API_BASE = "https://localhost:7149";
+
+const API_BASE =
+    window.location.port === "5500" ? "https://localhost:7149" : ""; //for hosting purposes
 let roomCodeGlobal = 0;
 let isSessionOwner = false;
 
@@ -328,7 +330,7 @@ async function updatePageBasedOnSessionState(sessionState){
         numberOfPlayers.textContent = `${sessionState.playersAnsweredQuestion} / ${sessionState.amountOfPlayers} players answered`;
     }
 
-    roomCodeParagraph.textContent = `Room Code: ${sessionState.RoomCode}`;
+    roomCodeParagraph.textContent = `Room Code: ${sessionState.roomCode}`;
 
     if(sessionState.roundState == 0){
         phaseInfo.textContent = "Waiting for start";
