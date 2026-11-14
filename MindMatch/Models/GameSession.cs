@@ -6,7 +6,7 @@ namespace MindMatch.Models
     {
         public int gameSessionId { get; set; }
 
-        public int maxAmountOfPlayers { get; set; } = 2;
+        public int maxAmountOfPlayers { get; set; } = 10;
 
         public string joinCode { get; set; } = "";
 

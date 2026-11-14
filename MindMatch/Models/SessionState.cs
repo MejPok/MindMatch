@@ -16,5 +16,7 @@ namespace MindMatch.Models
 
         public List<string> playerNames { get; set; }
         public List<int> playerScores { get; set; }
+
+        public string roomCode { get; set; } = -1 + "";
     }
 }

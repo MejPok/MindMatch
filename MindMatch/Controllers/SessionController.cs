@@ -143,6 +143,7 @@ namespace MindMatch.Controllers
             SessionState sessionState = new SessionState();
             sessionState.AmountOfPlayers = session.joinedPlayers.Count;
             sessionState.SessionStarted = session.sessionStarted;
+            sessionState.roomCode = session.joinCode;
 
             
 

@@ -1,6 +1,6 @@
 ﻿let joinedMatch = false;
 const API_BASE = "https://localhost:7149";
-let roomCode = 0;
+let roomCodeGlobal = 0;
 let isSessionOwner = false;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -140,6 +140,7 @@ async function JoinRoom(joinCodePassed = null){
 
         joinedMatch = true;
         console.log("joined fine hopefully");
+        roomCodeGlobal = code;
         ShowRoomScreen();
         getSessionState();
 
@@ -221,8 +222,9 @@ async function CreateRoom(){
         const joinCode = await createRoom();
         console.log("Room code:", joinCode);
 
+        roomCodeGlobal = joinCode;
         isSessionOwner = true;
-        await JoinRoom(joinCode);
+        await JoinRoom(roomCodeGlobal);
         await askOwnerForRoundQuestions();
 
         roomCode = joinCode;
@@ -326,7 +328,7 @@ async function updatePageBasedOnSessionState(sessionState){
         numberOfPlayers.textContent = `${sessionState.playersAnsweredQuestion} / ${sessionState.amountOfPlayers} players answered`;
     }
 
-    roomCodeParagraph.textContent = `Room Code: ${roomCode}`;
+    roomCodeParagraph.textContent = `Room Code: ${sessionState.RoomCode}`;
 
     if(sessionState.roundState == 0){
         phaseInfo.textContent = "Waiting for start";
@@ -336,7 +338,7 @@ async function updatePageBasedOnSessionState(sessionState){
 
     } else if(sessionState.roundState == 1){
 
-        phaseInfo.textContent = "Not everyone answered yet";
+        phaseInfo.textContent = `${sessionState.playersAnsweredQuestion} / ${sessionState.amountOfPlayers} answered`;
         submitButton.hidden = false;
         questionDiv.textContent = `${sessionState.roundQuestion}`;
 
