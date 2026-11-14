@@ -1,7 +1,7 @@
 ﻿let joinedMatch = false;
 
 const API_BASE =
-    window.location.port === "5500" ? "https://localhost:7149" : ""; //for hosting purposes
+    window.location.port === "5500" ? "https://localhost:7149" : "https://mindmatch-lukasprogram.runasp.net"; //for hosting purposes
 let roomCodeGlobal = 0;
 let isSessionOwner = false;
 
