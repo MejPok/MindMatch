@@ -7,3 +7,4 @@ The players that get the same answer get points based on how many players answer
 
 To try the app simply go to the page: https://mindmatch-lukasprogram.runasp.net
 Expect bugs and things to be placeholders, however the main thing is it works somehow.
+Please be mindful of how you use the app as not to crash the server, it is hosted on a free monsterasp hosting.
