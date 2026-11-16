@@ -8,11 +8,17 @@ The players that get the same answer get points based on how many players answer
 
 How to play:
 Choose your name
+
 Create your room
+
 Choose your five questions for this session.
+
 Wait for others to join using the room code.
+
 Start the game by using the next phase button as an owner.
+
 Answer the questions the same as other players to gain points.
+
 Enjoy guessing their answers
 
 
