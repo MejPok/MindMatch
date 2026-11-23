@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@theme {
+  --color-mind-blue: #010736;
+  --color-mind-sky: #0D1C42;
+  --color-mind-mint: #22396F;
+  --color-mind-cream: #FCF1D0;
+}
