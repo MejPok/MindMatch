@@ -4,7 +4,7 @@ type JoinedPlayer = {
   playerName: string;
   playerToken: string;
   sessionId: number;
-  roomCode: number;
+  roomCode: string;
   isSessionOwner: boolean;
   score: number;
 };
@@ -35,15 +35,7 @@ function App() {
         timeRemaining: 0,
   });
 
-
-  if(currentPage == "welcome" || currentPage == "play"){
-    return (
-      <div className="min-h-screen bg-mind-cream text-mind-blue flex items-center justify-center">
-        <WelcomePage state={currentPage} setCurrentPage={setCurrentPage}/>
-      </div>
-    )
-
-  }else if(joinedGame && player) {
+  if(joinedGame && player) {
     return (
       <div className="min-h-screen bg-mind-cream text-mind-blue flex items-center justify-center">
           <GamePage
@@ -55,8 +47,14 @@ function App() {
           />
       </div> 
     )
-  }
-  else if(currentPage == "create" ) {
+  } else if(currentPage == "welcome" || currentPage == "play"){
+    return (
+      <div className="min-h-screen bg-mind-cream text-mind-blue flex items-center justify-center">
+        <WelcomePage state={currentPage} setCurrentPage={setCurrentPage}/>
+      </div>
+    )
+
+  } else if(currentPage == "create" ) {
 
     return (
       <div className="min-h-screen bg-mind-cream text-mind-blue flex items-center justify-center">
@@ -160,14 +158,15 @@ function CreateGamePage(props: CreateGameProps){
       const createdRoomCode = await createRoom();
       
       const player = await joinRoom(createdRoomCode, pName);
+      
+      props.onJoined(player);
 
       sessionStorage.setItem("playerToken", player.playerToken);
       sessionStorage.setItem("sessionId", String(player.sessionId));
 
-      props.onJoined(player);
       props.setGameCreated(true);
       props.setJoinedGame(true);
-
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create room.");
     } finally {
@@ -297,7 +296,7 @@ function GamePage(props: GameProps){
       </h2>
 
       <h2 className="text-2xl text-mind-blue">
-        Room Code: {sessionStorage.getItem()}
+        Room Code: {props.player.roomCode}
       </h2>
 
       <h2 className="text-2xl text-mind-blue">
@@ -325,7 +324,8 @@ async function joinRoom(joinCode: string, name: string) : Promise<JoinedPlayer> 
     throw new Error(body || `Request failed (${response.status})`);
   }
 
-  let player =JSON.parse(body) as JoinedPlayer;
+  let player = JSON.parse(body) as JoinedPlayer;
+  player.roomCode = joinCode;
   return player;
 }
 
