@@ -56,7 +56,7 @@ namespace MindMatch.Controllers
 
             if (session == null)
             {
-                return NotFound();
+                return NotFound("Session doesnt exist");
             }
 
             if (!session.isSessionFull())
