@@ -89,7 +89,7 @@ namespace MindMatch.Controllers
 
 
         [HttpPost("CreateQuestions/{sessionId}/{playerToken}")]
-        public async Task<IActionResult> CreateRoundQuestions([FromQuery] int sessionId, [FromQuery] string playerToken, List<string> questionsForRounds) //allows owner to set the questions
+        public async Task<IActionResult> CreateRoundQuestions([FromRoute] int sessionId, [FromRoute] string playerToken, List<string> questionsForRounds) //allows owner to set the questions
         {
             var session = await dbContext.GameSessions
 .Include(s => s.joinedPlayers)
