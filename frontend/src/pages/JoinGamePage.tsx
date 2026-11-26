@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JoinGameProps } from '../props';
+import type { JoinedPlayer } from '../types';
 
 
 function JoinGamePage(props: JoinGameProps){
@@ -81,6 +82,26 @@ function JoinGamePage(props: JoinGameProps){
 
   
   </div>
+}
+
+const API_BASE = "";
+
+async function joinRoom(joinCode: string, name: string) : Promise<JoinedPlayer> {
+  const path =     
+    `/api/session/joinRoom/${encodeURIComponent(joinCode)}` +
+    `/${encodeURIComponent(name)}`;
+//joinRoom/{joinCode}/{name}
+  const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
+
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(body || `Request failed (${response.status})`);
+  }
+
+  let player = JSON.parse(body) as JoinedPlayer;
+  player.roomCode = joinCode;
+  return player;
 }
 
 export default JoinGamePage;

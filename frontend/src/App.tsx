@@ -5,9 +5,6 @@ import type { RoundInfo } from './types';
 
 
 
-const API_BASE = "";
-    // window.location.port === "5173" ? "https://localhost:5173" : "https://mindmatch-lukasprogram.runasp.net"; //for hosting purposes
-
 function App() {
   const [currentPage, setCurrentPage] = useState("welcome");
   const [gameCreated, setGameCreated] = useState(false);
@@ -82,43 +79,5 @@ function App() {
     );
 
   }
-}
-
-
-
-
-
-
-
-async function joinRoom(joinCode: string, name: string) : Promise<JoinedPlayer> {
-  const path =     
-    `/api/session/joinRoom/${encodeURIComponent(joinCode)}` +
-    `/${encodeURIComponent(name)}`;
-//joinRoom/{joinCode}/{name}
-  const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
-
-  const body = await response.text();
-
-  if (!response.ok) {
-    throw new Error(body || `Request failed (${response.status})`);
-  }
-
-  let player = JSON.parse(body) as JoinedPlayer;
-  player.roomCode = joinCode;
-  return player;
-}
-
-async function createRoom() : Promise<string> {
-  const path =     
-    `/api/session/newRoom`;
-//joinRoom/{joinCode}/{name}
-  const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
-  const body = await response.text();
-
-  if (!response.ok) {
-    throw new Error(body || `Request failed (${response.status})`);
-  }
-
-  return JSON.parse(body) as string;
 }
 export default App

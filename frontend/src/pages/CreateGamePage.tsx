@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { CreateGameProps } from '../props';
+import type { JoinedPlayer } from '../types';
 
 function CreateGamePage(props: CreateGameProps){
   const [creatingRoom, creatingRoomSet] = useState(false);
@@ -38,15 +39,16 @@ function CreateGamePage(props: CreateGameProps){
       
       const player = await joinRoom(createdRoomCode, pName);
       
+      
       props.onJoined(player);
-
+      
       sessionStorage.setItem("playerToken", player.playerToken);
       sessionStorage.setItem("sessionId", String(player.sessionId));
-
+      
+      await createQuestions(player.sessionId, player.playerToken, questionsArray);
       props.setGameCreated(true);
       props.setJoinedGame(true);
 
-      createQuestions(player.sessionId, player.playerToken, questionsArray);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create room.");
@@ -63,7 +65,7 @@ function CreateGamePage(props: CreateGameProps){
     ) {
 
     const path =     
-    `/api/session/${sessionId}/${playerToken}`;
+    `/api/session/CreateQuestions/${sessionId}/${playerToken}`;
 
     const response = await fetch(
         `${API_BASE}${path}`,
@@ -79,7 +81,7 @@ function CreateGamePage(props: CreateGameProps){
     if (!response.ok) {
         throw new Error(await response.text());
     }
-}
+  }
 
   return <div className="flex flex-col gap-6 rounded-lg bg-mind-mint p-10 border-4 border-mind-blue">
   
@@ -145,5 +147,39 @@ function CreateGamePage(props: CreateGameProps){
   
   </div>
 }
+const API_BASE = "";
+
+async function joinRoom(joinCode: string, name: string) : Promise<JoinedPlayer> {
+  const path =     
+    `/api/session/joinRoom/${encodeURIComponent(joinCode)}` +
+    `/${encodeURIComponent(name)}`;
+//joinRoom/{joinCode}/{name}
+  const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
+
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(body || `Request failed (${response.status})`);
+  }
+
+  let player = JSON.parse(body) as JoinedPlayer;
+  player.roomCode = joinCode;
+  return player;
+}
+
+async function createRoom() : Promise<string> {
+  const path =     
+    `/api/session/newRoom`;
+//joinRoom/{joinCode}/{name}
+  const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(body || `Request failed (${response.status})`);
+  }
+
+  return JSON.parse(body) as string;
+}
+
 
 export default CreateGamePage;
