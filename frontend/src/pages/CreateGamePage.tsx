@@ -38,7 +38,7 @@ function CreateGamePage(props: CreateGameProps){
       const createdRoomCode = await createRoom();
       
       const player = await joinRoom(createdRoomCode, pName);
-      
+      player.isSessionOwner = true;
       
       props.onJoined(player);
       
@@ -55,7 +55,6 @@ function CreateGamePage(props: CreateGameProps){
     } finally {
       creatingRoomSet(false);
     }
-
   }
 
   async function createQuestions(
@@ -122,14 +121,9 @@ function CreateGamePage(props: CreateGameProps){
 
     <button 
       onClick={() => {
-        if(createdQuestions){
           handleCreatingJoining();
-        } else {
-          
-            setCreatedQuestions(true);
-            setCreatingQuestions(true);
-          
-        }
+          setCreatedQuestions(true);
+          setCreatingQuestions(true);
       }}
       className="rounded bg-mind-blue px-6 py-3 text-mind-cream hover:bg-mind-sky"
     >
@@ -147,7 +141,8 @@ function CreateGamePage(props: CreateGameProps){
   
   </div>
 }
-const API_BASE = "";
+const API_BASE =
+    window.location.port === "5173" ? "https://localhost:7149" : "https://mindmatch-lukasprogram.runasp.net"; //for hosting purposes
 
 async function joinRoom(joinCode: string, name: string) : Promise<JoinedPlayer> {
   const path =     

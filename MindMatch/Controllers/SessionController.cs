@@ -228,7 +228,7 @@ namespace MindMatch.Controllers
             await dbContext.SaveChangesAsync();
         }
 
-        [HttpPost]
+        [HttpPost("StartRound")]
         public async Task<IActionResult> StartRound([FromQuery] int sessionId, [FromQuery] string playerToken)
         {
             var session = await dbContext.GameSessions

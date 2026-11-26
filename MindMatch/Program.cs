@@ -14,12 +14,13 @@ namespace MindMatch
                 options.AddPolicy("Frontend", policy =>
                 {
                     policy
-                        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "https://mindmatch-lukasprogram.runasp.net") //for it to work with every page, even if its debug or hosted
+                        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173", "https://mindmatch-lukasprogram.runasp.net") //for it to work with every page, even if its debug or hosted
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
             });
 
+            
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -33,6 +34,8 @@ namespace MindMatch
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            app.UseCors("Frontend");
 
             using (var scope = app.Services.CreateScope())
             {
